@@ -4,24 +4,53 @@
 For this Project as `IA626 Big Data Course`, I worked on the `ADS-B Exchange` Aircraft tracking data. Initially I have used three textfiles for `NY-USA` for ADS-B Data. Transponder systems such as ADS-B [(Automatic Dependent Surveillance-Broadcast)](https://globe.adsbexchange.com/) is equipped in aircraft. Around seventy percent of commericial aircraft use this system. This system records the information which can be used to retrieve key values such as aircraft speed, latitude, longitude, vertical speed, altitude, many more. 
 
 ## Dataset Explanation
-dt: the time this file was generated, in seconds since Jan 1 1970 00:00:00 GMT (the Unix epoch)
-flight: callsign, the flight name or aircraft registration as 8 chars (2.2.8.2.6)
-alt_baro: the aircraft barometric altitude in feet
-alt_geom: geometric (GNSS / INS) altitude in feet referenced to the WGS84 ellipsoid
-gs: ground speed in knots
-ias: indicated air speed in knots
-tas: true air speed in knots
-mach: Mach number
-track: true track over ground in degrees (0-359)
-track_rate: Rate of change of track, degrees/second
-roll: Roll, degrees, negative is left roll
-mag_heading: Heading, degrees clockwise from magnetic north
-true_heading: Heading, degrees clockwise from true north (usually only transmitted on ground, in the air usually derived from the magnetic heading using magnetic model WMM2020)
-baro_rate: Rate of change of barometric altitude, feet/minute
-geom_rate: Rate of change of geometric (GNSS / INS) altitude, feet/minute
-squawk: Mode A code (Squawk), encoded as 4 octal digits
-emergency: ADS-B emergency/priority status, a superset of the 7×00 squawks (2.2.3.2.7.8.1.1)
-category: emitter category to identify particular aircraft or vehicle classes (values A0 – D7) (2.2.3.2.5.2)
+* **dt**: the time this file was generated, in seconds since Jan 1 1970 00:00:00 GMT (the Unix epoch)
+* **flight**: callsign, the flight name or aircraft registration as 8 chars (2.2.8.2.6)
+* **alt_baro**: the aircraft barometric altitude in feet
+* **alt_geom**: geometric (GNSS / INS) altitude in feet referenced to the WGS84 ellipsoid
+* **gs**: ground speed in knots
+* **ias**: indicated air speed in knots
+* **tas**: true air speed in knots
+* **mach**: Mach number
+* **track**: true track over ground in degrees (0-359)
+* **track_rate**: Rate of change of track, degrees/second
+* **roll**: Roll, degrees, negative is left roll
+* **mag_heading**: Heading, degrees clockwise from magnetic north
+* **true_heading**: Heading, degrees clockwise from true north (usually only transmitted on ground, in the air usually derived from the magnetic heading using magnetic model WMM2020)
+* **baro_rate**: Rate of change of barometric altitude, feet/minute
+* **geom_rate**: Rate of change of geometric (GNSS / INS) altitude, feet/minute
+* **squawk**: Mode A code (Squawk), encoded as 4 octal digits
+* **emergency**: ADS-B emergency/priority status, a superset of the 7×00 squawks (2.2.3.2.7.8.1.1)
+* **category**: emitter category to identify particular aircraft or vehicle classes (values A0 – D7) (2.2.3.2.5.2)
+* **messages**: the total number of Mode S messages processed since readsb started.
+* **nav_qnh**: altimeter setting (QFE or QNH/QNE), hPa
+* **nav_altitude_mcp**: selected altitude from the Mode Control Panel / Flight Control Unit (MCP/FCU) or equivalent equipment
+* **nav_altitude_fms**: selected altitude from the Flight Manaagement System (FMS) (2.2.3.2.7.1.3.3)
+* **nav_heading**: selected heading (True or Magnetic is not defined in DO-260B, mostly Magnetic as that is the de facto standard) (2.2.3.2.7.1.3.7)
+* **nav_modes**: set of engaged automation modes: ‘autopilot’, ‘vnav’, ‘althold’, ‘approach’, ‘lnav’, ‘tcas’
+* **lat**, **lon**: the aircraft position in decimal degrees
+* **nic**: Navigation Integrity Category (2.2.3.2.7.2.6)
+* **rc**: Radius of Containment, meters; a measure of position integrity derived from NIC & supplementary bits. (2.2.3.2.7.2.6, Table 2-69)
+* **seen_pos**: how long ago (in seconds before “now”) the position was last updated
+* **track**: true track over ground in degrees (0-359)
+* **version**: ADS-B Version Number 0, 1, 2 (3-7 are reserved) (2.2.3.2.7.5)
+* **nic_baro**: Navigation Integrity Category for Barometric Altitude (2.2.5.1.35)
+* **nac_p**: Navigation Accuracy for Position (2.2.5.1.35)
+* **nac_v**: Navigation Accuracy for Velocity (2.2.5.1.19)
+* **sil**: Source Integity Level (2.2.5.1.40)
+* **sil_type**: interpretation of SIL: unknown, perhour, persample
+* **gva**: Geometric Vertical Accuracy (2.2.3.2.7.2.8)
+* **sda**: System Design Assurance (2.2.3.2.7.2.4.6)
+* **mlat**: list of fields derived from MLAT data
+* **tisb**: list of fields derived from TIS-B data
+* **messages**: total number of Mode S messages received from this aircraft
+* **seen**: how long ago (in seconds before “now”) a message was last received from this aircraft
+* **rssi**: recent average RSSI (signal power), in dbFS; this will always be negative.
+* **alert**: Flight status alert bit (2.2.3.2.3.2)
+* **spi**: Flight status special position identification bit (2.2.3.2.3.2)
+* **wd**, **ws**: wind direction, wind speed: calculated from ground track, true heading, true airspeed and ground speed
+* **oat**, **tat**: outer air temperate, total air temperature: calculated from mach number and true airspeed (typically somewhat inaccurate at lower altitudes / mach numbers below 0.5)
+
 
 ## Loading Libraries Required
 
@@ -36,7 +65,7 @@ import matplotlib.pyplot as plt
 
 #### Method to read the text files
 
-There are number of files so, I created a method to read file, convert it to json format and append it to dictionary. Dictionaries are easy to process and efficiently processed in python. 
+There are number of files so, I created a method to read file, convert it to json format and append it to dictionary. Dictionaries are easy to process and efficiently processed in python. I have used flight number as standard to collect data. If no flight number information is available with data I have not collected other attributes of data for this part of data extraction. 
 
 ```python
 def data_extraction(file):
@@ -168,6 +197,29 @@ result_df.to_csv('data/combined_dataset.csv')
 
 6. Let's Visualize speed for a flight vs time.
 
+There are currently around 99 different flights data available in dataset for different time. 
+
+```python
+print(result_df.flight.unique())
+```
+![Distinct_Flights](results/r4.PNG)
+
+Creating Dataframe for flight `ACA56`. 
+```python
+# for f in df11.flight.unique():
+#Looking for one flight speed in mph vs different time from the start
+
+fACA56_gs = pd.DataFrame(columns=['dt','gs', 'lat','lon'])
+for d in range(len(result_df.dt)):
+    if result_df.flight[d] == 'ACA56   ':
+        #print(df11.dt[d])
+        fACA56_gs = fACA56_gs.append({'dt':result_df.dt[d],'gs':result_df['gs'][d]}, ignore_index=True)
+        #print(f_gs)
+#print(fACA56_gs)
+
+```
+Visualizing the resultant flight data: 
+
 ```python
 import matplotlib.pyplot as plt
 x = range(len(fACA56_gs['dt']))
@@ -187,7 +239,7 @@ plt.show()
 
 
 
-
+```
 Different keys represent following information: 
   hex (String optional)
   flight (String optional - name of plane)
@@ -219,6 +271,13 @@ Different keys represent following information:
   emergency (optional string)
   lat (long optional)
   lon (long optional)
- 
+```
+
+Next, I want to use `ADS-B Exchange` API that offers same information, un-filtered flight data. This is just for demostration purpose. 
+
+```python
+
+
+```
  
  
